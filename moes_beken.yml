@@ -1,0 +1,100 @@
+# Basic Config
+---
+substitutions:
+  #   # https://esphome.io/guides/configuration-types.html#substitutions
+  device_name: moes-beken           # hostname & entity_id
+  friendly_name: "Moes Dimmer"      # Displayed in HA frontend
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  
+bk72xx:
+  board: cb2s    # https://docs.libretiny.eu/boards/wb2s/
+                 # https://developer.tuya.com/en/docs/iot/wb2s-module-datasheet?id=K9ghecl7kc479
+  framework:
+    version: dev
+
+
+wifi:
+  power_save_mode: none
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+    
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: !secret ap_ssid
+    password: !secret ap_password
+
+captive_portal:
+
+web_server:
+  port: 80
+  # https://esphome.io/components/web_server.html
+
+logger:
+#  level: VERBOSE #makes uart stream available in esphome logstream
+  baud_rate: 0 #disable logging over uart to avoid interference
+               # with sending/receiving over the UART port on ESP8266
+
+  hardware_uart: UART1 # redirect logs to UART1 GPIO2 to avoid conflicts
+                       # with the MCU communication through the main hardware UART
+
+  # https://esphome.io/components/logger
+  level: INFO
+
+api:
+
+ota:
+  - platform: esphome
+  - platform: web_server
+
+uart:
+  tx_pin: TX1
+  rx_pin: RX1
+  baud_rate: 9600
+  id: main_hw_uart
+
+# Register the Tuya MCU connection
+tuya:
+
+light:
+  - platform: "tuya"
+    name: ${friendly_name} - Porch
+    switch_datapoint: 1
+    dimmer_datapoint: 2
+    min_value: 200
+    max_value: 1000
+    restore_mode: ALWAYS_OFF
+  - platform: "tuya"
+    name: ${friendly_name} - Living
+    switch_datapoint: 7
+    dimmer_datapoint: 8
+    min_value: 200
+    max_value: 1000
+    restore_mode: ALWAYS_OFF
+    
+
+
+text_sensor:
+  - platform: version
+    name: $friendly_name ESPHome Version
+    id: esphome_version
+    hide_timestamp: True
+  - platform: wifi_info
+    ip_address:
+      id: ip_address
+      name: $friendly_name IP Address
+    mac_address:
+      name: $friendly_name Mac
+      id: mac_address
+
+button:
+  - platform: restart
+    name: ${friendly_name} Restart
+
+sensor:
+  - platform: uptime
+    name: $friendly_name Uptime Sensor
+  - platform: wifi_signal
+    name: $friendly_name wifi signal
